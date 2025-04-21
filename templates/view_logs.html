@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}View Logs - Security Event Logger{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Filters -->
+    <div class="gradient-card rounded-lg p-6 mb-6">
+        <h3 class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary mb-4">Filter Logs</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Date Range -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
+                <div class="flex space-x-2">
+                    <input type="date" 
+                           id="date_from" 
+                           class="flex-1 px-4 py-2 bg-dark-input text-gray-200 rounded-lg border border-dark-border focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover">
+                    <input type="date" 
+                           id="date_to" 
+                           class="flex-1 px-4 py-2 bg-dark-input text-gray-200 rounded-lg border border-dark-border focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover">
+                </div>
+            </div>
+            
+            <!-- Severity Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Severity</label>
+                <select id="severity_filter" 
+                        class="w-full px-4 py-2 bg-dark-input text-gray-200 rounded-lg border border-dark-border focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover">
+                    <option value="">All Severities</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Search</label>
+                <input type="text" 
+                       id="search" 
+                       placeholder="Search in logs..." 
+                       class="w-full px-4 py-2 bg-dark-input text-gray-200 rounded-lg border border-dark-border focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logs Table -->
+    <div class="gradient-card rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full" id="logs-table">
+                <thead class="bg-dark-header/50 backdrop-blur-sm">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Timestamp</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Event Type</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Description</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Severity</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Source</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">User</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dark-border/50">
+                    {% for log in logs %}
+                    <tr class="hover:bg-dark-hover/30 backdrop-blur-sm transition-all duration-200">
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ log.timestamp }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ log.event_type }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ log.description }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full backdrop-blur-sm
+                                {% if log.severity == 'Critical' %}
+                                    bg-red-900/50 text-red-200
+                                {% elif log.severity == 'High' %}
+                                    bg-orange-900/50 text-orange-200
+                                {% elif log.severity == 'Medium' %}
+                                    bg-yellow-900/50 text-yellow-200
+                                {% else %}
+                                    bg-green-900/50 text-green-200
+                                {% endif %}">
+                                {{ log.severity }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ log.source }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ log.user or 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <button onclick="viewDetails('{{ log.id }}')"
+                                    class="text-primary hover:text-primary-light transition-all duration-200">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="px-6 py-4 bg-dark-header/50 backdrop-blur-sm flex items-center justify-between border-t border-dark-border/50">
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-400">Rows per page:</span>
+                <select id="page-size" 
+                        class="bg-dark-input text-gray-200 rounded-lg border border-dark-border px-2 py-1 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="prev-page" 
+                        class="px-3 py-1 text-sm text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+                    Previous
+                </button>
+                <span class="text-sm text-gray-400">
+                    Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                </span>
+                <button id="next-page"
+                        class="px-3 py-1 text-sm text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div id="log-details-modal" 
+     class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="gradient-card rounded-lg max-w-2xl w-full mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">Log Details</h3>
+                <button onclick="closeModal()"
+                        class="text-gray-400 hover:text-white transition-all duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="log-details-content" class="space-y-4">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal()"
+                        class="px-4 py-2 bg-dark-input text-gray-300 rounded-lg border border-dark-border hover:bg-dark-hover transition-all duration-200">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize filters and pagination
+    let currentFilters = {
+        dateFrom: '',
+        dateTo: '',
+        severity: '',
+        search: '',
+        page: 1,
+        pageSize: 10
+    };
+    
+    // Filter change handlers
+    document.getElementById('date_from').addEventListener('change', (e) => {
+        currentFilters.dateFrom = e.target.value;
+        refreshTable();
+    });
+    
+    document.getElementById('date_to').addEventListener('change', (e) => {
+        currentFilters.dateTo = e.target.value;
+        refreshTable();
+    });
+    
+    document.getElementById('severity_filter').addEventListener('change', (e) => {
+        currentFilters.severity = e.target.value;
+        refreshTable();
+    });
+    
+    document.getElementById('search').addEventListener('input', debounce((e) => {
+        currentFilters.search = e.target.value;
+        refreshTable();
+    }, 300));
+    
+    document.getElementById('page-size').addEventListener('change', (e) => {
+        currentFilters.pageSize = parseInt(e.target.value);
+        currentFilters.page = 1;
+        refreshTable();
+    });
+    
+    // Pagination handlers
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentFilters.page > 1) {
+            currentFilters.page--;
+            refreshTable();
+        }
+    });
+    
+    document.getElementById('next-page').addEventListener('click', () => {
+        const totalPages = parseInt(document.getElementById('total-pages').textContent);
+        if (currentFilters.page < totalPages) {
+            currentFilters.page++;
+            refreshTable();
+        }
+    });
+    
+    // Utility functions
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    function getSeverityClass(severity) {
+        switch (severity) {
+            case 'Critical': return 'bg-red-900/50 text-red-200';
+            case 'High': return 'bg-orange-900/50 text-orange-200';
+            case 'Medium': return 'bg-yellow-900/50 text-yellow-200';
+            default: return 'bg-green-900/50 text-green-200';
+        }
+    }
+    
+    async function refreshTable() {
+        try {
+            const tableBody = document.querySelector('#logs-table tbody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center space-x-2 text-gray-400">
+                            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            const response = await fetch('/api/logs?' + new URLSearchParams(currentFilters));
+            const data = await response.json();
+            
+            // Update table content
+            tableBody.innerHTML = data.logs.map(log => `
+                <tr class="hover:bg-dark-hover/30 backdrop-blur-sm transition-all duration-200">
+                    <td class="px-6 py-4 text-sm text-gray-300">${log.timestamp}</td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${log.event_type}</td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${log.description}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full backdrop-blur-sm ${getSeverityClass(log.severity)}">
+                            ${log.severity}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${log.source}</td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${log.user || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <button onclick="viewDetails('${log.id}')"
+                                class="text-primary hover:text-primary-light transition-all duration-200">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Update pagination
+            document.getElementById('current-page').textContent = currentFilters.page;
+            document.getElementById('total-pages').textContent = Math.ceil(data.total / currentFilters.pageSize);
+            
+            // Update button states
+            document.getElementById('prev-page').disabled = currentFilters.page === 1;
+            document.getElementById('next-page').disabled = currentFilters.page >= Math.ceil(data.total / currentFilters.pageSize);
+        } catch (error) {
+            console.error('Error refreshing table:', error);
+        }
+    }
+    
+    // Modal functions
+    function viewDetails(logId) {
+        const modal = document.getElementById('log-details-modal');
+        const content = document.getElementById('log-details-content');
+        
+        // Show loading state
+        content.innerHTML = `
+            <div class="flex items-center justify-center space-x-2 text-gray-400 py-8">
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Loading details...</span>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+        
+        // Fetch and display log details
+        fetch(`/api/logs/${logId}`)
+            .then(response => response.json())
+            .then(log => {
+            content.innerHTML = `
+                    <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                                <label class="block text-sm font-medium text-gray-400">Event Type</label>
+                                <p class="mt-1 text-gray-200">${log.event_type}</p>
+                    </div>
+                    <div>
+                                <label class="block text-sm font-medium text-gray-400">Severity</label>
+                                <span class="inline-block mt-1 px-2 py-1 text-xs font-medium rounded-full ${getSeverityClass(log.severity)}">
+                            ${log.severity}
+                        </span>
+                    </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400">Description</label>
+                            <p class="mt-1 text-gray-200">${log.description}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400">Source</label>
+                                <p class="mt-1 text-gray-200">${log.source}</p>
+                            </div>
+                    <div>
+                                <label class="block text-sm font-medium text-gray-400">User</label>
+                                <p class="mt-1 text-gray-200">${log.user || 'N/A'}</p>
+                    </div>
+                    </div>
+                    <div>
+                            <label class="block text-sm font-medium text-gray-400">Timestamp</label>
+                            <p class="mt-1 text-gray-200">${log.timestamp}</p>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error fetching log details:', error);
+                content.innerHTML = `
+                    <div class="text-center text-red-400 py-8">
+                        Failed to load log details. Please try again.
+                </div>
+            `;
+            });
+    }
+    
+    function closeModal() {
+        document.getElementById('log-details-modal').classList.add('hidden');
+    }
+    
+    // Initial load
+    refreshTable();
+</script>
+{% endblock %} 

@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}System Monitor - Security Event Logger{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+    <!-- Top Row -->
+    <!-- System Matrix -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h2 class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary mb-6">System Matrix</h2>
+        
+        <!-- CPU Usage -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-gray-300">CPU Usage</h3>
+                <span class="text-primary" id="cpu-percentage">0%</span>
+            </div>
+            <div class="w-full bg-dark-input rounded-full h-2 overflow-hidden">
+                <div id="cpu-bar" class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Memory Usage -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-gray-300">Memory Usage</h3>
+                <span class="text-primary" id="memory-percentage">0% (0GB / 0GB)</span>
+            </div>
+            <div class="w-full bg-dark-input rounded-full h-2 overflow-hidden">
+                <div id="memory-bar" class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Disk Usage -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-gray-300">Disk Usage</h3>
+                <span class="text-primary" id="disk-percentage">0% (0GB / 0GB)</span>
+            </div>
+            <div class="w-full bg-dark-input rounded-full h-2 overflow-hidden">
+                <div id="disk-bar" class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h2 class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary mb-6">System Information</h2>
+        
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-gray-300 mb-2">Operating System</h3>
+                <p class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">Windows 11</p>
+            </div>
+            <div>
+                <h3 class="text-gray-300 mb-2">Hostname</h3>
+                <p class="text-gray-400" id="hostname">Loading...</p>
+            </div>
+            <div>
+                <h3 class="text-gray-300 mb-2">Uptime</h3>
+                <p class="text-gray-400" id="uptime">Loading...</p>
+            </div>
+            <div>
+                <h3 class="text-gray-300 mb-2">Last Boot</h3>
+                <p class="text-gray-400" id="last-boot">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <!-- Network Activity -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h2 class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary mb-6">Network Activity</h2>
+        
+        <!-- Upload/Download -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+                <h3 class="text-gray-300 mb-2">Upload</h3>
+                <p class="text-primary text-xl" id="upload-speed">0 KB/s</p>
+            </div>
+            <div>
+                <h3 class="text-gray-300 mb-2">Download</h3>
+                <p class="text-primary text-xl" id="download-speed">0 KB/s</p>
+            </div>
+        </div>
+        
+        <!-- Network Connections -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="text-gray-300 text-left">
+                        <th class="pb-2">Protocol</th>
+                        <th class="pb-2">Local Address</th>
+                        <th class="pb-2">Remote Address</th>
+                        <th class="pb-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="network-connections" class="text-gray-400 divide-y divide-dark-border/50">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Active Processes -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">Active Processes</h2>
+            <div class="flex items-center space-x-4">
+                <input type="text" placeholder="Search processes..." 
+                       class="bg-dark-input text-gray-200 px-4 py-2 rounded-lg border border-dark-border focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover"
+                       id="process-search">
+                <select class="bg-dark-input text-gray-200 px-4 py-2 rounded-lg border border-dark-border focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:outline-none transition-all hover:bg-dark-hover"
+                        id="process-sort">
+                    <option value="cpu">Sort by CPU</option>
+                    <option value="memory">Sort by Memory</option>
+                    <option value="pid">Sort by PID</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="text-gray-300 text-left">
+                        <th class="pb-2">Process</th>
+                        <th class="pb-2">PID</th>
+                        <th class="pb-2">CPU %</th>
+                        <th class="pb-2">Memory</th>
+                        <th class="pb-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="process-list" class="text-gray-400 divide-y divide-dark-border/50">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Cache DOM elements
+const domElements = {
+    cpuPercentage: document.getElementById('cpu-percentage'),
+    cpuBar: document.getElementById('cpu-bar'),
+    memoryPercentage: document.getElementById('memory-percentage'),
+    memoryBar: document.getElementById('memory-bar'),
+    diskPercentage: document.getElementById('disk-percentage'),
+    diskBar: document.getElementById('disk-bar'),
+    hostname: document.getElementById('hostname'),
+    uptime: document.getElementById('uptime'),
+    lastBoot: document.getElementById('last-boot'),
+    uploadSpeed: document.getElementById('upload-speed'),
+    downloadSpeed: document.getElementById('download-speed'),
+    networkConnections: document.getElementById('network-connections'),
+    processList: document.getElementById('process-list'),
+    processSearch: document.getElementById('process-search'),
+    processSort: document.getElementById('process-sort')
+};
+
+// Utility functions with memoization
+const memoize = (fn) => {
+    const cache = new Map();
+    return (...args) => {
+        const key = JSON.stringify(args);
+        if (cache.has(key)) return cache.get(key);
+        const result = fn(...args);
+        cache.set(key, result);
+        return result;
+    };
+};
+
+const formatBytes = memoize((bytes, decimals = 2) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+});
+
+const formatUptime = memoize((seconds) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${days}d ${hours}h ${minutes}m`;
+});
+
+// Update functions with optimizations
+const updateSystemMetrics = (() => {
+    let lastUpdate = {};
+    
+    return async () => {
+        try {
+            const response = await fetch('/api/system-info');
+            const data = await response.json();
+            
+            // Only update values that have changed
+            if (data.cpu.total !== lastUpdate.cpuTotal) {
+                domElements.cpuPercentage.textContent = `${data.cpu.total.toFixed(1)}%`;
+                domElements.cpuBar.style.width = `${data.cpu.total}%`;
+                lastUpdate.cpuTotal = data.cpu.total;
+            }
+            
+            const memoryText = `${data.memory.percent}% (${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)})`;
+            if (memoryText !== lastUpdate.memoryText) {
+                domElements.memoryPercentage.textContent = memoryText;
+                domElements.memoryBar.style.width = `${data.memory.percent}%`;
+                lastUpdate.memoryText = memoryText;
+            }
+            
+            const diskText = `${data.disk.percent}% (${formatBytes(data.disk.used)} / ${formatBytes(data.disk.total)})`;
+            if (diskText !== lastUpdate.diskText) {
+                domElements.diskPercentage.textContent = diskText;
+                domElements.diskBar.style.width = `${data.disk.percent}%`;
+                lastUpdate.diskText = diskText;
+            }
+            
+            if (data.hostname !== lastUpdate.hostname) {
+                domElements.hostname.textContent = data.hostname;
+                lastUpdate.hostname = data.hostname;
+            }
+            
+            const uptimeText = formatUptime(data.uptime);
+            if (uptimeText !== lastUpdate.uptimeText) {
+                domElements.uptime.textContent = uptimeText;
+                lastUpdate.uptimeText = uptimeText;
+            }
+            
+            const bootTime = new Date(data.boot_time * 1000).toLocaleString();
+            if (bootTime !== lastUpdate.bootTime) {
+                domElements.lastBoot.textContent = bootTime;
+                lastUpdate.bootTime = bootTime;
+            }
+        } catch (error) {
+            console.error('Error updating system metrics:', error);
+        }
+    };
+})();
+
+const updateProcesses = (() => {
+    let processCache = new Map();
+    let lastSearchTerm = '';
+    let lastSortBy = 'cpu';
+    
+    return async () => {
+        try {
+            const response = await fetch('/api/processes');
+            const processes = await response.json();
+            
+            const searchTerm = domElements.processSearch.value.toLowerCase();
+            const sortBy = domElements.processSort.value;
+            
+            // Only reprocess if search or sort criteria have changed
+            if (searchTerm === lastSearchTerm && sortBy === lastSortBy) {
+                const currentProcesses = new Set(processes.map(p => p.pid));
+                
+                // Remove processes that no longer exist
+                for (const pid of processCache.keys()) {
+                    if (!currentProcesses.has(pid)) {
+                        processCache.delete(pid);
+                    }
+                }
+                
+                // Update or add new processes
+                let hasChanges = false;
+                processes.forEach(proc => {
+                    const cached = processCache.get(proc.pid);
+                    if (!cached || 
+                        cached.cpu_percent !== proc.cpu_percent || 
+                        cached.memory_bytes !== proc.memory_bytes || 
+                        cached.status !== proc.status) {
+                        processCache.set(proc.pid, proc);
+                        hasChanges = true;
+                    }
+                });
+                
+                // Only update DOM if there are changes
+                if (!hasChanges) return;
+            } else {
+                // Update cache with new search/sort criteria
+                processCache = new Map(processes.map(p => [p.pid, p]));
+                lastSearchTerm = searchTerm;
+                lastSortBy = sortBy;
+            }
+            
+            // Filter and sort processes
+            let filteredProcesses = Array.from(processCache.values())
+                .filter(proc => proc.name.toLowerCase().includes(searchTerm));
+            
+            filteredProcesses.sort((a, b) => {
+                switch(sortBy) {
+                    case 'cpu': return b.cpu_percent - a.cpu_percent;
+                    case 'memory': return b.memory_bytes - a.memory_bytes;
+                    case 'pid': return a.pid - b.pid;
+                    default: return b.cpu_percent - a.cpu_percent;
+                }
+            });
+            
+            // Update table using DocumentFragment for better performance
+            const fragment = document.createDocumentFragment();
+            filteredProcesses.forEach(proc => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-dark-hover/30 backdrop-blur-sm transition-all duration-200';
+                row.innerHTML = `
+                    <td class="py-2">${proc.name}</td>
+                    <td class="py-2">${proc.pid}</td>
+                    <td class="py-2">${proc.cpu_percent.toFixed(1)}%</td>
+                    <td class="py-2">${formatBytes(proc.memory_bytes)}</td>
+                    <td class="py-2">${proc.status}</td>
+                `;
+                fragment.appendChild(row);
+            });
+            
+            domElements.processList.innerHTML = '';
+            domElements.processList.appendChild(fragment);
+        } catch (error) {
+            console.error('Error updating processes:', error);
+        }
+    };
+})();
+
+const updateNetwork = (() => {
+    let lastSpeeds = { upload: -1, download: -1 };
+    let lastConnections = '';
+    
+    return async () => {
+        try {
+            const response = await fetch('/api/network');
+            const data = await response.json();
+            
+            // Update speeds only if changed
+            if (data.speeds.upload !== lastSpeeds.upload) {
+                domElements.uploadSpeed.textContent = `${(data.speeds.upload / 1024).toFixed(1)} KB/s`;
+                lastSpeeds.upload = data.speeds.upload;
+            }
+            
+            if (data.speeds.download !== lastSpeeds.download) {
+                domElements.downloadSpeed.textContent = `${(data.speeds.download / 1024).toFixed(1)} KB/s`;
+                lastSpeeds.download = data.speeds.download;
+            }
+            
+            // Update connections only if changed
+            const connectionsHtml = data.connections.map(conn => `
+                <tr class="hover:bg-dark-hover/30 backdrop-blur-sm transition-all duration-200">
+                    <td class="py-2">${conn.protocol}</td>
+                    <td class="py-2">${conn.local_address}</td>
+                    <td class="py-2">${conn.remote_address}</td>
+                    <td class="py-2">
+                        <span class="px-2 py-1 text-xs rounded-full ${
+                            conn.status === 'ESTABLISHED' ? 'bg-green-900/50 text-green-200' :
+                            conn.status === 'LISTENING' ? 'bg-blue-900/50 text-blue-200' :
+                            'bg-gray-900/50 text-gray-200'
+                        }">
+                            ${conn.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+            
+            if (connectionsHtml !== lastConnections) {
+                domElements.networkConnections.innerHTML = connectionsHtml;
+                lastConnections = connectionsHtml;
+            }
+        } catch (error) {
+            console.error('Error updating network info:', error);
+        }
+    };
+})();
+
+// Set up event listeners with debouncing
+const debounce = (fn, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
+};
+
+domElements.processSearch.addEventListener('input', debounce(updateProcesses, 300));
+domElements.processSort.addEventListener('change', updateProcesses);
+
+// Initialize updates with different intervals for different components
+updateSystemMetrics();
+updateProcesses();
+updateNetwork();
+
+// Set up periodic updates with different intervals for different components
+setInterval(updateSystemMetrics, 3000);  // Update system metrics every 3 seconds
+setInterval(updateProcesses, 5000);      // Update processes every 5 seconds
+setInterval(updateNetwork, 2000);        // Update network info every 2 seconds
+
+// Clean up on page unload
+window.addEventListener('unload', () => {
+    // Clear all intervals
+    const highestId = window.setInterval(() => {}, 0);
+    for (let i = 0; i < highestId; i++) {
+        window.clearInterval(i);
+    }
+});
+</script>
+{% endblock %} 

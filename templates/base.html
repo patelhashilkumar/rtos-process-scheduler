@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Security Event Logger{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom theme -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#8B5CF6',
+                            light: '#A78BFA',
+                            dark: '#7C3AED'
+                        },
+                        dark: {
+                            DEFAULT: '#0F0F12',
+                            lighter: '#1A1A23',
+                            input: '#1E1E2A',
+                            header: '#14141B',
+                            hover: '#22222E',
+                            border: '#2D2D3D'
+                        }
+                    },
+                    scale: {
+                        '102': '1.02'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom styles -->
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1A1A23;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #8B5CF6;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7C3AED;
+        }
+        
+        /* Gradient backgrounds with glass effect */
+        .gradient-card {
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.08));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.3),
+                       inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-card:hover {
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0.12));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 8px 32px -2px rgba(139, 92, 246, 0.2),
+                       inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Glass effect for inputs */
+        .bg-dark-input {
+            background: rgba(30, 30, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(139, 92, 246, 0.08);
+        }
+        
+        .bg-dark-input:hover {
+            background: rgba(34, 34, 46, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.12);
+        }
+        
+        .bg-dark-input:focus {
+            background: rgba(34, 34, 46, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        
+        /* Smooth transitions */
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        /* Loading animation */
+        .loading {
+            position: relative;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Floating animation for cards */
+        .float-animation:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -5px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Hamburger menu animation */
+        .hamburger-line {
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-active .line-1 {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-active .line-2 {
+            opacity: 0;
+        }
+
+        .hamburger-active .line-3 {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* Main content background adjustment */
+        main {
+            background: linear-gradient(135deg, #0F0F12 0%, #1A1A23 100%);
+        }
+
+        /* Enhanced glass morphism for tables */
+        table tbody tr {
+            background: rgba(26, 26, 35, 0.3);
+            backdrop-filter: blur(6px);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(139, 92, 246, 0.05);
+        }
+
+        table tbody tr:hover {
+            background: rgba(34, 34, 46, 0.35);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(139, 92, 246, 0.08);
+            transform: translateZ(0);
+        }
+
+        /* Network and Process tables specific styling */
+        .network-table tr,
+        .process-table tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .network-table tr:hover,
+        .process-table tr:hover {
+            background: rgba(34, 34, 46, 0.32);
+        }
+
+        /* Status badges with glass effect */
+        .status-badge {
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-dark text-gray-100" x-data="{ sidebarOpen: false }">
+    <!-- Mobile Navigation Overlay -->
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition-opacity ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false"
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+         x-cloak></div>
+
+    <!-- Sidebar -->
+    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-dark-lighter transform transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-dark-border"
+           :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}"
+           @click.away="sidebarOpen = false">
+        
+        <!-- Logo -->
+        <div class="flex items-center justify-between h-16 px-6 bg-dark">
+            <div class="flex items-center space-x-2">
+                <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <span class="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">Security Logger</span>
+            </div>
+            <button @click="sidebarOpen = false" class="lg:hidden text-gray-400 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="px-4 py-4">
+            <a href="{{ url_for('index') }}" 
+               class="flex items-center px-4 py-3 mb-2 text-gray-400 hover:text-white rounded-lg transition-all duration-200
+                      {{ 'bg-gradient-to-r from-primary/20 to-primary-dark/10 text-white' if request.endpoint == 'index' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Dashboard
+            </a>
+            
+            <a href="{{ url_for('log_event') }}"
+               class="flex items-center px-4 py-3 mb-2 text-gray-400 hover:text-white rounded-lg transition-all duration-200
+                      {{ 'bg-gradient-to-r from-primary/20 to-primary-dark/10 text-white' if request.endpoint == 'log_event' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Log Event
+            </a>
+            
+            <a href="{{ url_for('view_logs') }}"
+               class="flex items-center px-4 py-3 mb-2 text-gray-400 hover:text-white rounded-lg transition-all duration-200
+                      {{ 'bg-gradient-to-r from-primary/20 to-primary-dark/10 text-white' if request.endpoint == 'view_logs' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                View Logs
+            </a>
+            
+            <a href="{{ url_for('system_monitor') }}"
+               class="flex items-center px-4 py-3 mb-2 text-gray-400 hover:text-white rounded-lg transition-all duration-200
+                      {{ 'bg-gradient-to-r from-primary/20 to-primary-dark/10 text-white' if request.endpoint == 'system_monitor' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                System Monitor
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main content -->
+    <div class="lg:pl-64 min-h-screen flex flex-col">
+        <!-- Top bar -->
+        <header class="flex items-center justify-between h-16 px-6 bg-dark-header border-b border-dark-border">
+            <!-- Hamburger Menu Button -->
+            <button @click="sidebarOpen = !sidebarOpen" 
+                    class="lg:hidden relative z-50 w-10 h-10 focus:outline-none group"
+                    :class="{'hamburger-active': sidebarOpen}">
+                <div class="flex flex-col justify-center items-center w-6 h-6 relative">
+                    <span class="hamburger-line w-full h-0.5 bg-gray-300 rounded absolute transform transition-all duration-300 group-hover:bg-primary line-1"></span>
+                    <span class="hamburger-line w-full h-0.5 bg-gray-300 rounded absolute transform transition-all duration-300 group-hover:bg-primary line-2"></span>
+                    <span class="hamburger-line w-full h-0.5 bg-gray-300 rounded absolute transform transition-all duration-300 group-hover:bg-primary line-3"></span>
+                </div>
+            </button>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-400">System Info</span>
+                <div class="h-4 w-px bg-dark-border"></div>
+                <div class="flex items-center space-x-2 px-3 py-1 rounded-full bg-green-900/30">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span class="text-sm text-green-400">Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="flex-1 p-6 bg-gradient-to-br from-dark to-dark-lighter">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-lg {% if category == 'success' %}bg-green-800/50{% else %}bg-red-800/50{% endif %} text-white backdrop-blur-sm
+                                  transform hover:scale-102 transition-all duration-300 border border-opacity-10 {% if category == 'success' %}border-green-500{% else %}border-red-500{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Security Event Logger{% endblock %}
+
+{% block content %}
+<!-- System Info Cards at Top -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Operating System -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h3 class="text-lg font-semibold text-gray-200 mb-4">Operating System</h3>
+        <p class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">Windows 11</p>
+    </div>
+    
+    <!-- CPU Usage -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h3 class="text-lg font-semibold text-gray-200 mb-4">CPU Usage</h3>
+        <div class="flex items-end space-x-2">
+            <p class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary" id="cpu-usage">{{ system_info.cpu_usage }}%</p>
+            <div class="flex-1 bg-dark-input rounded-full h-2 overflow-hidden">
+                <div id="cpu-bar" 
+                     class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500"
+                     style="width: {{ system_info.cpu_usage }}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Memory Usage -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h3 class="text-lg font-semibold text-gray-200 mb-4">Memory Usage</h3>
+        <div class="flex items-end space-x-2">
+            <p class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary" id="memory-usage">{{ system_info.memory.used_percent }}%</p>
+            <div class="flex-1 bg-dark-input rounded-full h-2 overflow-hidden">
+                <div id="memory-bar"
+                     class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500"
+                     style="width: {{ system_info.memory.used_percent }}%"></div>
+            </div>
+        </div>
+        <p class="text-sm text-gray-400 mt-2" id="memory-total">Total: {{ system_info.memory.total }}GB</p>
+    </div>
+</div>
+
+<!-- Lower Section Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Active Processes -->
+    <div class="gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h3 class="text-lg font-semibold text-gray-200 mb-4">Active Processes</h3>
+        <p class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary" id="process-count">{{ system_info.processes }}</p>
+    </div>
+
+    <!-- Event Statistics -->
+    <div class="lg:col-span-2 gradient-card rounded-lg p-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+        <h3 class="text-lg font-semibold text-gray-200 mb-4">Event Statistics</h3>
+        
+        <div class="space-y-4">
+            <div>
+                <h4 class="text-sm font-medium text-gray-300 mb-2">Total Events</h4>
+                <p class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary" id="total-events">{{ stats.total_events }}</p>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-300 mb-2">Events by Severity</h4>
+                <div class="space-y-2" id="severity-stats">
+                    {% for severity, count in stats.severity_counts.items() %}
+                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-dark-hover/50 transition-all duration-200">
+                        <span class="text-gray-300">{{ severity }}</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-32 bg-dark-input rounded-full h-2 overflow-hidden">
+                                <div class="h-full transition-all duration-500
+                                    {% if severity == 'Critical' %}bg-gradient-to-r from-red-500 to-red-400
+                                    {% elif severity == 'High' %}bg-gradient-to-r from-orange-500 to-orange-400
+                                    {% elif severity == 'Medium' %}bg-gradient-to-r from-yellow-500 to-yellow-400
+                                    {% else %}bg-gradient-to-r from-green-500 to-green-400{% endif %}"
+                                    style="width: {{ (count / stats.total_events * 100) if stats.total_events > 0 else 0 }}%">
+                                </div>
+                            </div>
+                            <span class="text-gray-300 font-medium min-w-[3ch] text-right">{{ count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-medium text-gray-300 mb-2">Events by Type</h4>
+                <div class="space-y-2" id="type-stats">
+                    {% for type, count in stats.event_type_counts.items() %}
+                    <div class="flex items-center justify-between p-2 rounded-lg hover:bg-dark-hover/50 transition-all duration-200">
+                        <span class="text-gray-300">{{ type }}</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-32 bg-dark-input rounded-full h-2 overflow-hidden">
+                                <div class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500"
+                                    style="width: {{ (count / stats.total_events * 100) if stats.total_events > 0 else 0 }}%">
+                                </div>
+                            </div>
+                            <span class="text-gray-300 font-medium min-w-[3ch] text-right">{{ count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Events -->
+<div class="gradient-card rounded-lg p-6 mt-6 transform hover:scale-102 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+    <h2 class="text-xl font-semibold mb-4 text-gray-200">Recent Events</h2>
+    <div class="space-y-4">
+        {% for event in recent_events %}
+        <div class="flex items-center justify-between p-4 rounded-lg bg-dark-hover/30 backdrop-blur-sm transition-all duration-200 hover:bg-dark-hover/50 transform hover:scale-102
+            {% if event.severity == 'Critical' %}border-l-4 border-red-500
+            {% elif event.severity == 'High' %}border-l-4 border-orange-500
+            {% elif event.severity == 'Medium' %}border-l-4 border-yellow-500
+            {% else %}border-l-4 border-green-500{% endif %}">
+            <div class="flex-1">
+                <h3 class="font-medium text-gray-200">{{ event.event_type }}</h3>
+                <p class="text-sm text-gray-400">{{ event.description }}</p>
+                <p class="text-xs text-gray-500">{{ event.timestamp }}</p>
+            </div>
+            <span class="px-3 py-1 text-sm rounded-full ml-4 
+                {% if event.severity == 'Critical' %}bg-gradient-to-r from-red-600/80 to-red-500/80
+                {% elif event.severity == 'High' %}bg-gradient-to-r from-orange-600/80 to-orange-500/80
+                {% elif event.severity == 'Medium' %}bg-gradient-to-r from-yellow-600/80 to-yellow-500/80
+                {% else %}bg-gradient-to-r from-green-600/80 to-green-500/80{% endif %}
+                backdrop-blur-sm">
+                {{ event.severity }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Utility functions for severity styling
+    function getSeverityClass(severity) {
+        switch (severity) {
+            case 'Critical': return 'bg-red-900/50 text-red-200';
+            case 'High': return 'bg-orange-900/50 text-orange-200';
+            case 'Medium': return 'bg-yellow-900/50 text-yellow-200';
+            default: return 'bg-green-900/50 text-green-200';
+        }
+    }
+
+    function getSeverityColor(severity) {
+        switch (severity) {
+            case 'Critical': return 'bg-gradient-to-r from-red-600/80 to-red-500/80';
+            case 'High': return 'bg-gradient-to-r from-orange-600/80 to-orange-500/80';
+            case 'Medium': return 'bg-gradient-to-r from-yellow-600/80 to-yellow-500/80';
+            default: return 'bg-gradient-to-r from-green-600/80 to-green-500/80';
+        }
+    }
+
+    // Update system info every 3 seconds
+    function updateSystemInfo() {
+        fetch('/api/system-info')
+            .then(response => response.json())
+            .then(data => {
+                // Update CPU usage with animation
+                const cpuUsage = document.getElementById('cpu-usage');
+                const cpuBar = document.getElementById('cpu-bar');
+                const cpuValue = data.cpu.total || 0;
+                cpuUsage.textContent = `${cpuValue.toFixed(1)}%`;
+                cpuBar.style.width = `${cpuValue}%`;
+                
+                // Update memory usage with animation
+                const memoryUsage = document.getElementById('memory-usage');
+                const memoryBar = document.getElementById('memory-bar');
+                const memoryTotal = document.getElementById('memory-total');
+                const memoryPercent = data.memory.percent || 0;
+                const memoryTotalGB = ((data.memory.total || 0) / (1024 * 1024 * 1024)).toFixed(1);
+                const memoryUsedGB = ((data.memory.used || 0) / (1024 * 1024 * 1024)).toFixed(1);
+                
+                memoryUsage.textContent = `${memoryPercent}%`;
+                memoryBar.style.width = `${memoryPercent}%`;
+                memoryTotal.textContent = `Total: ${memoryTotalGB}GB`;
+                
+                // Update process count with animation
+                const processCount = document.getElementById('process-count');
+                const currentCount = parseInt(processCount.textContent) || 0;
+                const newCount = data.cpu.count.logical || 0;
+                animateNumber(processCount, currentCount, newCount);
+            })
+            .catch(error => {
+                console.error('Error updating system info:', error);
+                // Set default values on error
+                document.getElementById('cpu-usage').textContent = '0%';
+                document.getElementById('cpu-bar').style.width = '0%';
+                document.getElementById('memory-usage').textContent = '0%';
+                document.getElementById('memory-bar').style.width = '0%';
+                document.getElementById('memory-total').textContent = 'Total: 0GB';
+                document.getElementById('process-count').textContent = '0';
+            });
+    }
+    
+    // Update statistics every 10 seconds
+    function updateStatistics() {
+        fetch('/api/statistics')
+            .then(response => response.json())
+            .then(data => {
+                // Update total events
+                document.getElementById('total-events').textContent = data.total_events;
+                
+                // Update severity stats
+                const severityStats = document.getElementById('severity-stats');
+                severityStats.innerHTML = Object.entries(data.severity_counts)
+                    .map(([severity, count]) => `
+                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-dark-hover/50 transition-all duration-200">
+                            <span class="text-gray-300">${severity}</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-32 bg-dark-input rounded-full h-2 overflow-hidden">
+                                    <div class="h-full transition-all duration-500 ${getSeverityColor(severity)}"
+                                        style="width: ${(count / data.total_events * 100) || 0}%">
+                                    </div>
+                                </div>
+                                <span class="text-gray-300 font-medium min-w-[3ch] text-right">${count}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                
+                // Update type stats
+                const typeStats = document.getElementById('type-stats');
+                typeStats.innerHTML = Object.entries(data.event_type_counts)
+                    .map(([type, count]) => `
+                        <div class="flex items-center justify-between p-2 rounded-lg hover:bg-dark-hover/50 transition-all duration-200">
+                            <span class="text-gray-300">${type}</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-32 bg-dark-input rounded-full h-2 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-primary to-primary-dark h-full transition-all duration-500"
+                                        style="width: ${(count / data.total_events * 100) || 0}%">
+                                    </div>
+                                </div>
+                                <span class="text-gray-300 font-medium min-w-[3ch] text-right">${count}</span>
+                            </div>
+                        </div>
+                    `).join('');
+            })
+            .catch(error => console.error('Error updating statistics:', error));
+    }
+
+    // Start periodic updates
+    updateSystemInfo();
+    updateStatistics();
+    setInterval(updateSystemInfo, 3000);
+    setInterval(updateStatistics, 10000);
+
+    // Number animation utility
+    function animateNumber(element, start, end) {
+        const duration = 1000;
+        const startTime = performance.now();
+        const change = end - start;
+        
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const value = Math.round(start + (change * progress));
+            element.textContent = value;
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+        
+        requestAnimationFrame(update);
+    }
+</script>
+{% endblock %} 
