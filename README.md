@@ -1,66 +1,103 @@
-# Security Logging System
+# Security Event Logger
 
-A Python-based security event logging system that provides secure storage and viewing of security events.
+A modern web-based security monitoring and logging system with real-time system metrics visualization and event tracking.
 
 ## Features
 
-- Secure encryption of log data using Fernet (symmetric encryption)
-- Beautiful console interface using Rich
-- Structured event logging with timestamps
-- Optional user and IP address tracking
-- Severity levels for events
-- Easy-to-use command-line interface
+* **System Monitoring**
+  * Real-time CPU usage tracking
+  * Memory utilization monitoring
+  * Disk usage statistics
+  * Network activity monitoring
+  * Active process tracking
 
-## Installation
+* **Security Event Logging**
+  * Comprehensive event logging
+  * Severity-based categorization (Critical, High, Medium, Low)
+  * Detailed event descriptions
+  * Source and user tracking
+  * Timestamp recording
 
-1. Clone this repository
-2. Install the required dependencies:
+* **Modern UI/UX**
+  * Glass-morphism design
+  * Real-time updates
+  * Interactive dashboards
+  * Responsive layout
+  * Dark theme with purple accents
+
+* **Advanced Filtering**
+  * Date range filtering
+  * Severity-based filtering
+  * Search functionality
+  * Pagination support
+
+## Tech Stack
+
+* **Backend**
+  * Python
+  * Flask
+  * psutil (for system monitoring)
+  * python-dotenv
+  * cryptography
+
+* **Frontend**
+  * HTML5/CSS3
+  * JavaScript
+  * Tailwind CSS
+  * Alpine.js
+
+## Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/patelhashilkumar/rtos-process-scheduler.git
+cd rtos-process-scheduler
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
-
-Run the application:
+3. Run the application:
 ```bash
-python security_logger.py
+python app.py
 ```
 
-The application provides the following options:
-1. Log new event - Record a new security event
-2. View all logs - Display all logged events in a table format
-3. Exit - Close the application
+The application will be available at `http://localhost:5000`
+
+## Usage
+
+1. **Dashboard**
+   * View system metrics and event statistics
+   * Monitor real-time system status
+
+2. **Log Events**
+   * Create new security event logs
+   * Specify severity, description, and other details
+
+3. **View Logs**
+   * Browse through security events
+   * Filter and search logs
+   * View detailed event information
+
+4. **System Monitor**
+   * Track CPU, memory, and disk usage
+   * Monitor network activity
+   * View active processes
 
 ## Security Features
 
-- All logs are encrypted using Fernet encryption
-- Encryption key is stored in a .env file
-- Automatic key generation if not present
-- Secure storage of sensitive information
+* Secure event logging
+* Data encryption support
+* User activity tracking
+* System state monitoring
+* Network connection monitoring
 
-## Event Fields
+## Contributing
 
-- Timestamp (automatically generated)
-- Event Type (user-defined)
-- Severity (Low, Medium, High, Critical)
-- Description
-- Source
-- User (optional)
-- IP Address (optional)
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-## Example Usage
+## License
 
-1. Start the application
-2. Choose option 1 to log a new event
-3. Enter the event details:
-   - Event Type: "Login Attempt"
-   - Severity: "High"
-   - Description: "Multiple failed login attempts"
-   - Source: "Web Application"
-   - User: "admin"
-   - IP Address: "192.168.1.1"
-4. View the logs using option 2
-
-## Note
-
-Keep your .env file secure as it contains the encryption key. Without this key, you cannot decrypt and view the logs. 
+[MIT](https://choosealicense.com/licenses/mit/) 
